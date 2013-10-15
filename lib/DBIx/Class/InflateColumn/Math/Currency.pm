@@ -26,12 +26,12 @@ DBIx::Class::InflateColumn::Math::Currency - Inflate and Deflate "decimal" colum
 
     package HorseTrack::Database::Schema::Result::Bet;
     use base 'DBIx::Class::Core';
-    
+
     use strict;
     use warnings;
-    
+
     __PACKAGE__->load_components("InflateColumn::Math::Currency");
-    
+
     __PACKAGE__->add_columns(
       id         => { data_type => 'integer' },
       gambler_id => { data_type => 'integer' },
@@ -57,19 +57,19 @@ is storing the value with data_type of decimal, upon inflation a Math::Currency 
 from the resultset.
 
     package HorseTrack::Bet;
-    
+
     use strict;
     use warnings;
-    
+
     use Moose;
     use namespace::autoclean;
-    
+
     use Math::Currency;
-    
+
     has 'id'       => ( is => 'rw', isa => 'Int' );
     has 'gamber_id => ( is => 'rw', isa => 'Int' );
     has 'amount'   => ( is => 'rw', isa => 'Math::Currency' );
-    
+
     sub retrieve {
         my $self = shift;
         my $result = $schema->resultset('...')->search({ id => 1 })->single;

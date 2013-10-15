@@ -59,7 +59,7 @@ subtest "Deflate Negative Float Value" => sub {
 };
 
 subtest "Deflate Non Numeric Value" => sub {
-    throws_ok { 
+    throws_ok {
         my $math_currency = DBIx::Class::InflateColumn::Math::Currency::_deflate('NOT A NUMBER');
     } qr/Failed to deflate .*/, "Dies on invalid number";
 };
