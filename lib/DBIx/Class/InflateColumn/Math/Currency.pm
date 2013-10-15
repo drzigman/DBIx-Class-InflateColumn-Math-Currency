@@ -2,8 +2,13 @@ package DBIx::Class::InflateColumn::Math::Currency;
 
 use strict;
 use warnings;
+
 use base qw/DBIx::Class/;
+
 use Math::Currency;
+use Scalar::Util qw(looks_like_number);
+use Carp;
+
 use namespace::autoclean;
 
 # VERSION
@@ -20,22 +25,40 @@ sub register_column {
 
     $self->inflate_column(
         $column => {
-            inflate => _inflate($value, $object),
-            deflate => _default($value, $object),
+            inflate => \&_inflate,
+            deflate => \&_deflate,
         }
     );
 }
 
 sub _inflate {
-    my ($value, $object) = @_;
+    my $value = shift;
 
-    return Math::Currency->new($value);
+    if(ref $value eq "Math::Currency") {
+        return $value;
+    }
+    elsif(looks_like_number($value)) {
+        return Math::Currency->new($value);
+    }
+    else {
+        croak "Failed to inflate " . $value
+            . ".  This value is not a Math::Currency object nor does it look like a number";
+    }
 }
 
 sub _deflate {
-    my ($value, $object) = @_;
+    my $value = shift;
 
-    return $value->as_float;
+    if(ref $value eq "Math::Currency") {
+        return $value->as_float;
+    }
+    elsif(looks_like_number($value)) {
+        return $value;
+    }
+    else {
+        croak "Failed attempt to deflate " . $value
+            . ".  This value is not a Math::Currency object nor does it look like a number";
+    }
 }
 
 1;
