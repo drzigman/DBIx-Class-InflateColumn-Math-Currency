@@ -56,7 +56,7 @@ sub _deflate {
         return $value;
     }
     else {
-        croak "Failed attempt to deflate " . $value
+        croak "Failed to deflate " . $value
             . ".  This value is not a Math::Currency object nor does it look like a number";
     }
 }
