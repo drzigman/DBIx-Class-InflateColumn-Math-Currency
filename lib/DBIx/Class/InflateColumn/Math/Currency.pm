@@ -35,26 +35,20 @@ DBIx::Class::InflateColumn::Math::Currency - Inflate and Deflate "decimal" colum
     __PACKAGE__->add_columns(
       id         => { data_type => 'integer' },
       gambler_id => { data_type => 'integer' },
-      amount     => { data_type => 'decimal', size => [9,2] },
+      amount     => { data_type => 'decimal', size => [9,2], is_currency => 1 },
     );
 
 =head1 DESCRIPTION
 
-This module can be used to automagically inflate database columns of data type "decimal" into
-Math::Currency objects.  It is used similiar to other InflateColumn DBIx modules.
+This module can be used to automagically inflate database columns of data type "decimal" that are flagged with "is_currency" into Math::Currency objects.  It is used similiar to other InflateColumn DBIx modules.
 
-Once your Result is properly defined you can now pass Math::Currency objects (and regular integers and
-floats for that matter, they need not be Math::Currency objects) into columns of data_type decimal and
-retrieve Math::Currency objects from these columns as well.
+Once your Result is properly defined you can now pass Math::Currency objects (and regular integers and floats for that matter, they need not be Math::Currency objects) into columns of data_type decimal and retrieve Math::Currency objects from these columns as well.
 
-In the event anything other than a Math::Currency object, an integer, or a float, is provided this module
-will croak, stating as such.
+In the event anything other than a Math::Currency object, an integer, or a float, is provided this module will croak, stating as such.
 
 =head2 Inflation
 
-Inflation occurs whenever the data is being taken FROM the database.  In this case the database
-is storing the value with data_type of decimal, upon inflation a Math::Currency object is returned
-from the resultset.
+Inflation occurs whenever the data is being taken FROM the database.  In this case the database is storing the value with data_type of decimal, upon inflation a Math::Currency object is returned from the resultset.
 
     package HorseTrack::Bet;
 
@@ -68,7 +62,7 @@ from the resultset.
 
     has 'id'       => ( is => 'rw', isa => 'Int' );
     has 'gamber_id => ( is => 'rw', isa => 'Int' );
-    has 'amount'   => ( is => 'rw', isa => 'Math::Currency' );
+    has 'amount'   => ( is => 'rw', isa => 'Math::Currency', is_currency => 1 );
 
     sub retrieve {
         my $self = shift;
@@ -88,9 +82,7 @@ from the resultset.
 
 =head2 Deflation
 
-Deflation occurs whenever the data is being taken TO the database.  In this case an object
-of type Math::Currency is being stored into the a database columns with a data_type of "decimal".
-Using the same object from the Inflation example:
+Deflation occurs whenever the data is being taken TO the database.  In this case an object of type Math::Currency is being stored into the a database columns with a data_type of "decimal". Using the same object from the Inflation example:
 
     $schema->resultset('...')->create({
         id        => $self->id,
@@ -100,8 +92,7 @@ Using the same object from the Inflation example:
 
 =head1 METHODS
 
-Strictly speaking, you don't actually call any of these methods yourself.  DBIx handles the magic
-provided you have included the InflateColumn::Math::Currency component in your Result.
+Strictly speaking, you don't actually call any of these methods yourself.  DBIx handles the magic provided you have included the InflateColumn::Math::Currency component in your Result.
 
 Therefore, there are no public methods to be consumed.
 
@@ -112,14 +103,16 @@ sub register_column {
 
     $self->next::method($column, $info, @rest);
 
-    return unless $info->{data_type} eq 'decimal';
+    if( $info->{data_type} eq 'decimal' && $info->{is_currency } ) {
+        $self->inflate_column(
+            $column => {
+                inflate => \&_inflate,
+                deflate => \&_deflate,
+            }
+        );
+    }
 
-    $self->inflate_column(
-        $column => {
-            inflate => \&_inflate,
-            deflate => \&_deflate,
-        }
-    );
+    return;
 }
 
 sub _inflate {
